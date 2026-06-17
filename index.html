@@ -133,6 +133,13 @@
 
   .links a{ display:inline-block; margin-right:22px; font-weight:600; }
 
+  /* notice */
+  .notice{ margin-top:18px; background:#fff; border:1px solid var(--line); border-left:4px solid var(--teal);
+           border-radius:8px; padding:14px 18px; font-size:15px; color:var(--ink); font-weight:600;
+           display:flex; align-items:center; gap:12px; }
+  .notice .dot{ width:9px; height:9px; border-radius:50%; background:var(--teal); flex:0 0 auto;
+                box-shadow:0 0 0 4px rgba(58,168,152,.18); }
+
   /* footer */
   footer{ background:var(--ink); color:#bcd2cf; padding:30px 0; }
   footer .wrap{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
@@ -238,6 +245,7 @@
       <div><div class="k">Format</div><div class="v">Virtual &middot; 3 hours</div></div>
       <div><div class="k">Attendance</div><div class="v">By invitation</div></div>
     </div>
+    <div class="notice"><span class="dot"></span>The Zoom link will be sent to confirmed participants closer to the event date.</div>
   </div>
 </section>
 
@@ -301,6 +309,10 @@
       <details>
         <summary>What happens in the live design hour?</summary>
         <p>Participants collectively design simulated organisms in real time &mdash; a virtual translation of the in-person hands-on lab, grounded in the real experiments the labs have run.</p>
+      </details>
+      <details>
+        <summary>How do I join on the day?</summary>
+        <p>WCDO26 is held over Zoom. The Zoom link will be sent to confirmed participants closer to the event date.</p>
       </details>
       <details>
         <summary>Are these organisms safe?</summary>
