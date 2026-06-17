@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WCDO26 — The Second Abele Workshop on Computationally Designed Organisms</title>
+<meta name="description" content="WCDO26 — a half-day virtual Abele Workshop on Computationally Designed Organisms. Tuesday, July 14, 2026.">
+<style>
+  :root{
+    --ink:#0b1a24; --ink2:#10303f; --gold:#c79a4b; --teal:#3aa898;
+    --cream:#fbfaf7; --body:#23323c; --muted:#6a7882; --line:#e4e0d6;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{
+    font-family:-apple-system,"Helvetica Neue","Segoe UI",Arial,sans-serif;
+    color:var(--body); background:var(--cream); line-height:1.6; font-size:16px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .serif{ font-family:Georgia,"Times New Roman",serif; }
+  .eyebrow{ text-transform:uppercase; letter-spacing:2.6px; font-size:11px; font-weight:700; }
+  .wrap{ max-width:1040px; margin:0 auto; padding:0 28px; }
+  a{ color:var(--teal); text-decoration:none; }
+  a:hover{ text-decoration:underline; }
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky; top:0; z-index:50; background:rgba(11,26,36,.96);
+    backdrop-filter:saturate(140%) blur(6px); color:#fff;
+    border-bottom:1px solid rgba(199,154,75,.3);
+  }
+  nav .wrap{ display:flex; align-items:center; justify-content:space-between; height:58px; }
+  nav .brand{ font-family:Georgia,serif; font-weight:700; letter-spacing:1px; font-size:20px; }
+  nav ul{ list-style:none; display:flex; gap:24px; }
+  nav a{ color:#cfe6e1; text-transform:uppercase; letter-spacing:1.6px; font-size:11px; font-weight:700; }
+  nav a:hover{ color:var(--gold); text-decoration:none; }
+  @media(max-width:680px){ nav ul{ gap:14px; } nav a{ font-size:9.5px; letter-spacing:1px; } nav .brand{ font-size:17px; } }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative; overflow:hidden; color:#fff; padding:74px 0 64px;
+    background:
+      radial-gradient(120% 140% at 88% -10%, rgba(58,168,152,.30), transparent 46%),
+      linear-gradient(135deg,#0b1a24 0%, #10303f 62%, #0b2330 100%);
+  }
+  .hero .eyebrow{ color:var(--gold); }
+  .wordmark{ font-size:78px; font-weight:700; letter-spacing:1px; line-height:.94; margin:14px 0 10px; }
+  .official{ font-size:26px; line-height:1.3; font-weight:700; color:#f4f1e8; letter-spacing:.2px; }
+  .hero-sub{ font-size:15px; color:#a9c4c1; letter-spacing:.3px; margin:8px 0 26px; }
+  .hero-line{ font-size:30px; line-height:1.3; font-weight:600; max-width:74%; color:#f4f1e8; }
+  .hero-line b{ color:var(--gold); font-weight:600; }
+  .chip{
+    display:inline-block; margin-top:28px; border:1px solid rgba(199,154,75,.65);
+    background:rgba(199,154,75,.1); color:var(--gold); border-radius:30px;
+    padding:11px 24px; font-size:14px; letter-spacing:1.6px;
+    text-transform:uppercase; font-weight:700;
+  }
+  .glyph{ position:absolute; top:-40px; right:-40px; width:430px; height:auto;
+          mix-blend-mode:screen; opacity:.95; pointer-events:none;
+          -webkit-mask-image:radial-gradient(circle at 52% 47%, #000 46%, rgba(0,0,0,0) 72%);
+                  mask-image:radial-gradient(circle at 52% 47%, #000 46%, rgba(0,0,0,0) 72%); }
+  @media(max-width:680px){
+    .wordmark{ font-size:54px; } .official{ font-size:19px; } .hero-line{ font-size:22px; max-width:100%; }
+    .glyph{ opacity:.4; right:-90px; }
+  }
+  .rule{ height:3px; background:linear-gradient(90deg,var(--gold),rgba(199,154,75,0)); }
+
+  /* ---------- SECTIONS ---------- */
+  section{ padding:58px 0; border-bottom:1px solid var(--line); }
+  .sec-h{ font-size:12px; letter-spacing:2.4px; text-transform:uppercase; color:var(--teal);
+          font-weight:800; margin-bottom:20px; display:flex; align-items:center; gap:12px; }
+  .sec-h::after{ content:""; flex:1; height:1px; background:var(--line); }
+  h2.title{ font-family:Georgia,serif; font-size:30px; color:var(--ink); margin-bottom:16px; font-weight:700; }
+  .lede{ font-size:19px; line-height:1.62; color:#2c3b45; max-width:780px; }
+  .lede b{ color:var(--ink); }
+  p.body-p{ max-width:780px; margin-top:14px; color:#34434d; }
+
+  .def{ background:#fff; border:1px solid var(--line); border-left:4px solid var(--gold);
+        border-radius:8px; padding:20px 24px; margin-top:22px; max-width:780px; }
+  .def .term{ font-family:Georgia,serif; font-style:italic; font-size:20px; color:var(--ink); }
+  .def .gloss{ font-size:16px; color:var(--muted); margin-top:4px; }
+
+  /* pillars */
+  .pillars{ display:grid; grid-template-columns:1fr 1fr; gap:24px 40px; margin-top:8px; }
+  @media(max-width:680px){ .pillars{ grid-template-columns:1fr; } }
+  .pillar{ position:relative; padding-left:48px; }
+  .pillar .n{ position:absolute; left:0; top:-4px; font-family:Georgia,serif; font-size:34px;
+              font-weight:700; color:var(--gold); line-height:1; }
+  .pillar h4{ font-size:17px; color:var(--ink); margin-bottom:4px; }
+  .pillar p{ font-size:14.5px; color:var(--muted); }
+
+  /* schedule */
+  .agenda{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-top:8px; }
+  @media(max-width:680px){ .agenda{ grid-template-columns:1fr; } }
+  .acard{ background:#fff; border:1px solid var(--line); border-radius:10px; padding:22px; }
+  .acard .a-n{ font-family:Georgia,serif; color:var(--teal); font-size:22px; font-weight:700; }
+  .acard .a-t{ font-size:11px; letter-spacing:1.4px; text-transform:uppercase; color:var(--gold); font-weight:700; margin-top:4px; }
+  .acard h5{ font-size:18px; color:var(--ink); margin:6px 0; font-family:Georgia,serif; }
+  .acard p{ font-size:14px; color:var(--muted); }
+
+  /* participants */
+  .roster{ columns:3; column-gap:34px; margin-top:6px; }
+  @media(max-width:880px){ .roster{ columns:2; } }
+  @media(max-width:520px){ .roster{ columns:1; } }
+  .roster .p{ break-inside:avoid; padding:7px 0; border-bottom:1px solid var(--line); }
+  .roster .pn{ color:var(--ink); font-weight:600; font-size:15px; }
+  .roster .pa{ color:var(--muted); font-size:13px; }
+
+  .conveners{ display:flex; flex-wrap:wrap; gap:10px; margin-top:6px; }
+  .conveners .c{ background:#fff; border:1px solid var(--line); border-radius:30px;
+                 padding:8px 16px; font-size:14px; color:var(--ink); font-weight:600; }
+  .conveners .c span{ color:var(--muted); font-weight:400; }
+
+  /* faq */
+  .faq details{ background:#fff; border:1px solid var(--line); border-radius:8px;
+                padding:14px 18px; margin-bottom:12px; max-width:820px; }
+  .faq summary{ font-weight:600; color:var(--ink); cursor:pointer; font-size:16px; list-style:none; }
+  .faq summary::-webkit-details-marker{ display:none; }
+  .faq summary::before{ content:"+ "; color:var(--gold); font-weight:700; }
+  .faq details[open] summary::before{ content:"– "; }
+  .faq p{ margin-top:10px; color:#34434d; font-size:15px; }
+
+  /* facts strip */
+  .facts{ display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--line);
+          border-radius:10px; overflow:hidden; background:#fff; margin-top:8px; }
+  @media(max-width:680px){ .facts{ grid-template-columns:1fr 1fr; } }
+  .facts div{ padding:16px 18px; border-right:1px solid var(--line); }
+  .facts div:last-child{ border-right:none; }
+  .facts .k{ font-size:10px; letter-spacing:1.8px; text-transform:uppercase; color:var(--gold); font-weight:700; }
+  .facts .v{ font-size:16px; color:var(--ink); font-weight:600; margin-top:4px; }
+
+  .links a{ display:inline-block; margin-right:22px; font-weight:600; }
+
+  /* footer */
+  footer{ background:var(--ink); color:#bcd2cf; padding:30px 0; }
+  footer .wrap{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+  footer .l{ font-family:Georgia,serif; color:#fff; font-size:16px; }
+  footer .r{ font-size:11px; letter-spacing:2.4px; text-transform:uppercase; color:var(--gold); font-weight:700; }
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<nav>
+  <div class="wrap">
+    <div class="brand">WCDO26</div>
+    <ul>
+      <li><a href="#about">About</a></li>
+      <li><a href="#why">Why</a></li>
+      <li><a href="#schedule">Schedule</a></li>
+      <li><a href="#invitees">Invitees</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <img class="glyph" src="xenobot.png" alt="A xenobot under the microscope">
+  <div class="wrap">
+    <div class="eyebrow">An invitation</div>
+    <div class="wordmark serif">WCDO26</div>
+    <div class="official serif">The Second Abele Workshop on<br>Computationally Designed Organisms</div>
+    <div class="hero-sub">A virtual convening</div>
+    <div class="hero-line serif">AI has begun to design living things.<br><b>WCDO26 is the room where we decide what that means.</b></div>
+    <div class="chip">Tuesday, July&nbsp;14,&nbsp;2026 &middot; 1&ndash;4&nbsp;PM&nbsp;ET &middot; Virtual</div>
+  </div>
+</header>
+<div class="rule"></div>
+
+<!-- ================= ABOUT ================= -->
+<section id="about">
+  <div class="wrap">
+    <div class="sec-h">About</div>
+    <p class="lede">Biology is the oldest manufacturing platform there is &mdash; and it is becoming programmable. <b>Computationally designed organisms &mdash; living systems designed not by evolution, and not by hand, but by AI &mdash; are its leading edge.</b> WCDO26 convenes the people who will define this new category, drawn from the fields that rarely share a table: biology, AI, industry, and philosophy.</p>
+
+    <div class="def">
+      <div class="term">Computationally Designed Organism</div>
+      <div class="gloss">An organism that has been designed by AI.</div>
+    </div>
+
+    <p class="body-p">WCDO26 is the virtual follow-on to <b>CDO2025</b>, the first Abele Workshop, held in person at the University of Vermont in July 2025 with 33 invited leaders from academia, industry, and government. In the lineage of field-defining convenings like the 1956 Dartmouth conference on artificial intelligence, the workshop exists to help a new field build itself &mdash; and to chart the in-person <b>WCDO27</b>.</p>
+  </div>
+</section>
+
+<!-- ================= WHY ================= -->
+<section id="why">
+  <div class="wrap">
+    <div class="sec-h">Why convene</div>
+    <div class="pillars">
+      <div class="pillar"><span class="n">1</span>
+        <h4>A new category, not a novelty</h4>
+        <p>Xenobots and biobots are the first instances of AI-designed life &mdash; and the beginning of programmable biology as a field.</p>
+      </div>
+      <div class="pillar"><span class="n">2</span>
+        <h4>No single field can hold this alone</h4>
+        <p>The science, the tools, the capital, and the philosophy advance on separate tracks. For one afternoon, they advance together.</p>
+      </div>
+      <div class="pillar"><span class="n">3</span>
+        <h4>Progress, first-hand</h4>
+        <p>Mike Levin and Josh Bongard report the state of the art &mdash; the founders showing their work, not a panel speculating.</p>
+      </div>
+      <div class="pillar"><span class="n">4</span>
+        <h4>How a field builds itself</h4>
+        <p>WCDO26 sets the agenda and the guest list for the in-person WCDO27, in the lineage of Dartmouth 1956.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCHEDULE ================= -->
+<section id="schedule">
+  <div class="wrap">
+    <div class="sec-h">The afternoon &mdash; three hours</div>
+    <div class="agenda">
+      <div class="acard">
+        <div class="a-n">I</div><div class="a-t">Hour One</div>
+        <h5>State of the Field</h5>
+        <p>A progress briefing on xenobots and biobots from Levin &amp; Bongard &mdash; current results, told first-hand.</p>
+      </div>
+      <div class="acard">
+        <div class="a-n">II</div><div class="a-t">Hour Two</div>
+        <h5>Design, Together</h5>
+        <p>A live, collective design of simulated organisms &mdash; the whole room at the canvas, built from the lab's real experiments.</p>
+      </div>
+      <div class="acard">
+        <div class="a-n">III</div><div class="a-t">Hour Three</div>
+        <h5>Charting WCDO27</h5>
+        <p>A working session writing the collective document that shapes next year's two-day, in-person workshop.</p>
+      </div>
+    </div>
+    <div class="facts">
+      <div><div class="k">Date</div><div class="v">Tue, July 14, 2026</div></div>
+      <div><div class="k">Time</div><div class="v">1&ndash;4 PM ET</div></div>
+      <div><div class="k">Format</div><div class="v">Virtual &middot; 3 hours</div></div>
+      <div><div class="k">Attendance</div><div class="v">By invitation</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= INVITEES ================= -->
+<section id="invitees">
+  <div class="wrap">
+    <div class="sec-h">Conveners</div>
+    <div class="conveners">
+      <div class="c">Mike Levin <span>· Tufts</span></div>
+      <div class="c">Josh Bongard <span>· UVM</span></div>
+    </div>
+
+    <div class="sec-h" style="margin-top:40px;">Invitees</div>
+    <p class="body-p" style="margin-top:0;">Invitations are going out now. WCDO26 builds on the inaugural workshop, whose 33 invited participants spanned academia, industry, and government &mdash; including Stephen Wolfram and Martine Rothblatt, alongside leaders from DARPA, Ginkgo Bioworks, United Therapeutics, and the Wolfram Institute. Confirmed participants will be listed here as RSVPs arrive.</p>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-h">FAQ</div>
+    <div class="faq">
+      <details>
+        <summary>What is a computationally designed organism?</summary>
+        <p>A living system whose form is designed by AI rather than by evolution or by hand. Xenobots &mdash; sub-millimeter constructs built from a frog's own cells &mdash; were the first examples, reported in 2020&ndash;2021 by Blackiston, Kriegman, Levin, and Bongard.</p>
+      </details>
+      <details>
+        <summary>Who is WCDO26 for?</summary>
+        <p>It is a by-invitation convening of biologists, AI researchers, industry leaders, and philosophers shaping this emerging field. Invitations build on the CDO2025 cohort.</p>
+      </details>
+      <details>
+        <summary>What happens in the live design hour?</summary>
+        <p>Participants collectively design simulated organisms in real time &mdash; a virtual translation of the in-person hands-on lab, grounded in the real experiments the labs have run.</p>
+      </details>
+      <details>
+        <summary>Are these organisms safe?</summary>
+        <p>These are sub-millimeter constructs built from a frog's own cells and studied in controlled lab settings. They are biodegradable, last only days to weeks, and cannot persist or propagate outside the lab. The research community treats safety and ethics as first-order questions &mdash; which is why WCDO26 brings philosophers and ethicists into the room alongside the scientists.</p>
+      </details>
+      <details>
+        <summary>How does WCDO26 relate to WCDO27?</summary>
+        <p>WCDO26 is virtual and half a day; its closing hour writes the plan and guest list for WCDO27, the two-day in-person workshop in 2027.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================= READING / CONTACT ================= -->
+<section id="contact">
+  <div class="wrap">
+    <div class="sec-h">Further reading</div>
+    <p class="links">
+      <a href="https://cdo2025.github.io/">CDO2025 &mdash; the first workshop</a>
+      <a href="https://en.wikipedia.org/wiki/Xenobot">Xenobots (Wikipedia)</a>
+    </p>
+
+    <div class="sec-h" style="margin-top:40px;">Contact</div>
+    <p class="body-p" style="margin-top:0;">For questions about WCDO26, contact Josh Bongard &mdash; <a href="mailto:josh.bongard@uvm.edu">josh.bongard@uvm.edu</a>.</p>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap">
+    <div class="l serif">A new category, between biology and AI.</div>
+    <div class="r">By invitation only</div>
+  </div>
+</footer>
+
+</body>
+</html>
