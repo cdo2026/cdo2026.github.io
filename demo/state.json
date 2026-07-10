@@ -1,12 +1,44 @@
 {
- "updated": "sample-1",
+ "updated": "sample-2",
  "grid": 4,
  "probes": [
   {
+   "env": "Temperate freshwater lakes",
+   "q": "Can xenobots live in freshwater lakes?",
+   "verdict": "yes",
+   "note": "fresh (<0.5 ppt), 4\u201345 \u00b0C, liquid water \u2014 within tolerance (sample data)",
+   "cells": [
+    [
+     24,
+     11
+    ],
+    [
+     24,
+     10
+    ],
+    [
+     25,
+     11
+    ],
+    [
+     72,
+     9
+    ],
+    [
+     71,
+     9
+    ],
+    [
+     46,
+     10
+    ]
+   ]
+  },
+  {
    "env": "Brackish water",
    "q": "Can xenobots live in brackish water?",
-   "verdict": "yes",
-   "note": "salinity 0.5\u201330 ppt sits within tolerance (sample data)",
+   "verdict": "no",
+   "note": "salinity 0.5\u201330 ppt exceeds the 0.5 ppt ceiling (sample data)",
    "cells": [
     [
      50,
@@ -38,7 +70,7 @@
    "env": "Hot desert surface",
    "q": "Can xenobots survive in the Sahara?",
    "verdict": "no",
-   "note": "surface temps far exceed upper thermal limit (sample data)",
+   "note": "surface temps exceed 45 \u00b0C and no liquid water (sample data)",
    "cells": [
     [
      47,
