@@ -80,7 +80,8 @@
               font-weight:800; margin-bottom:10px; text-align:center; }
   .feed{ list-style:none; display:flex; flex-direction:column; gap:8px; }
   .feed li{ display:flex; align-items:center; gap:12px; background:rgba(255,255,255,.035);
-            border:1px solid var(--line); border-radius:10px; padding:10px 14px; font-size:13.5px; }
+            border:1px solid var(--line); border-radius:10px; padding:10px 14px; font-size:13.5px; cursor:pointer; }
+  .feed li[data-idx]:hover{ border-color:rgba(199,154,75,.55); background:rgba(255,255,255,.06); }
   .feed .tag{ font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
               padding:3px 9px; border-radius:20px; flex:none; }
   .feed .tag.yes{ background:rgba(55,214,122,.16); color:var(--yes); }
@@ -202,7 +203,7 @@
 
   var _labels=[], _probes=[];   // hit-testing for hover tooltips
   function placesOf(p){ return p.places || (p.cells ? [{label:p.env||'', cells:p.cells}] : []); }
-  var _state=null, VIEW={zoom:1, panX:0, panY:0};
+  var _state=null, VIEW={zoom:1, panX:0, panY:0}, _flash=null;
   function clampView(){
     if(VIEW.zoom<1) VIEW.zoom=1; if(VIEW.zoom>8) VIEW.zoom=8;
     var minX=W*(1-VIEW.zoom), minY=H*(1-VIEW.zoom);
@@ -242,8 +243,44 @@
     drawOutlines(probes);
     drawLabels(probes);
     drawPanel(probes);
+    if(_flash) drawFlash();
     ctx.setTransform(1,0,0,1,0,0);
     renderFeed(probes);
+  }
+  function panelCenterWorld(){ return { x:(lon2x(PANEL.lonW)+lon2x(PANEL.lonE))/2, y:(lat2y(PANEL.latN)+lat2y(PANEL.latS))/2 }; }
+  function probeCentroidWorld(p){
+    var pls=placesOf(p), all=[];
+    for(var i=0;i<pls.length;i++){ var cs=pls[i].cells||[]; for(var j=0;j<cs.length;j++) all.push(cs[j]); }
+    if(!all.length) return null;
+    var comps=components(all); comps.sort(function(a,b){ return b.length-a.length; });
+    var comp=comps[0], sc=0, sr=0;
+    for(var k=0;k<comp.length;k++){ sc+=comp[k][0]; sr+=comp[k][1]; }
+    var cc=sc/comp.length, cr=sr/comp.length, best=comp[0], bd=1e9;
+    for(var k=0;k<comp.length;k++){ var d=(comp[k][0]-cc)*(comp[k][0]-cc)+(comp[k][1]-cr)*(comp[k][1]-cr); if(d<bd){ bd=d; best=comp[k]; } }
+    var r=cellRect(best[0],best[1]); return { x:r[0]+r[2]/2, y:r[1]+r[3]/2 };
+  }
+  function focusProbe(idx){
+    var p=_probes[idx]; if(!p) return;
+    var t=probeCentroidWorld(p), z;
+    if(t){ z=Math.max(VIEW.zoom,3); }
+    else {
+      for(var k=0;k<_labels.length;k++){ var L=_labels[k]; if(L.rect && L.info && L.info.num===idx+1){ t={x:(L.rect[0]+L.rect[2])/2, y:(L.rect[1]+L.rect[3])/2}; break; } }
+      if(!t) t=panelCenterWorld();
+      z=Math.max(VIEW.zoom,2);
+    }
+    VIEW.zoom=z; VIEW.panX=W/2 - t.x*VIEW.zoom; VIEW.panY=H/2 - t.y*VIEW.zoom;
+    clampView(); flashAt(t.x,t.y);
+  }
+  function flashAt(x,y){ _flash={x:x,y:y,t0:Date.now()}; animateFlash(); }
+  function animateFlash(){
+    if(!_flash) return;
+    if(Date.now()-_flash.t0>1400){ _flash=null; draw(); return; }
+    draw(); requestAnimationFrame(animateFlash);
+  }
+  function drawFlash(){
+    var k=(Date.now()-_flash.t0)/1400, R=(9+34*k)/VIEW.zoom;
+    ctx.beginPath(); ctx.arc(_flash.x,_flash.y,R,0,Math.PI*2);
+    ctx.strokeStyle='rgba(199,154,75,'+(1-k).toFixed(2)+')'; ctx.lineWidth=3/VIEW.zoom; ctx.stroke();
   }
   function drawOutlines(probes){
     ctx.lineWidth = 1.3/VIEW.zoom;   // ~constant width on screen
@@ -366,7 +403,7 @@
       var p=probes[i];
       var v=p.verdict||'pending';
       var label = v==='yes'?'Survivable':(v==='no'?'Not survivable':'Resolving');
-      html+='<li><span class="qnum">'+(i+1)+'</span><span class="tag '+v+'">'+label+'</span><span class="q">'+esc(p.env||p.q||'')+'</span>'
+      html+='<li data-idx="'+i+'"><span class="qnum">'+(i+1)+'</span><span class="tag '+v+'">'+label+'</span><span class="q">'+esc(p.env||p.q||'')+'</span>'
           + (p.note?'<span class="why">&mdash; '+esc(p.note)+'</span>':'')+'</li>';
     }
     feed.innerHTML=html;
@@ -527,6 +564,12 @@
     if(quiet){ if(!sugs.classList.contains('quiet')){ sugs.classList.add('quiet'); renderHints(); } sugl.textContent='Quiet moment — try one:'; }
     else { sugs.classList.remove('quiet'); sugl.textContent='Need ideas?'; }
   }, 5000);
+
+  // ---- click a feed item to fly to its region ----
+  document.getElementById('feed').addEventListener('click',function(e){
+    var t=e.target; while(t && t.nodeName!=='LI') t=t.parentNode;
+    if(t && t.getAttribute){ var idx=t.getAttribute('data-idx'); if(idx!==null) focusProbe(+idx); }
+  });
 
   // ---- boot ----
   render(null);
