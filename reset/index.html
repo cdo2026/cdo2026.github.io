@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WCDO26 Demo — Reset</title>
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  :root{ --ink:#0b1a24; --gold:#c79a4b; --no:#e5534b; }
+  html,body{ height:100%; }
+  body{
+    font-family:-apple-system,"Helvetica Neue","Segoe UI",Arial,sans-serif; color:#eaf1f0;
+    background:radial-gradient(120% 130% at 50% -20%, rgba(58,168,152,.14), transparent 55%),
+               linear-gradient(160deg,#0b1a24 0%, #0c2330 70%, #0b1a24 100%);
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; padding:24px;
+  }
+  h1{ font-family:Georgia,serif; font-size:22px; font-weight:700; color:#f4f1e8; letter-spacing:.3px; }
+  p{ font-size:13.5px; color:#8aa0ab; max-width:360px; text-align:center; line-height:1.5; }
+  button{
+    background:var(--no); color:#fff; border:none; border-radius:30px; padding:16px 48px;
+    font-size:15px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; cursor:pointer;
+    box-shadow:0 10px 30px rgba(229,83,75,.35); transition:filter .15s;
+  }
+  button:hover{ filter:brightness(1.08); }
+  button:disabled{ opacity:.5; cursor:default; }
+  #msg{ font-size:13px; min-height:18px; color:var(--gold); font-weight:700; }
+</style>
+</head>
+<body>
+  <h1>WCDO26 Demo</h1>
+  <button id="reset">Reset the demo</button>
+  <div id="msg"></div>
+  <p>Clears every painted region and the question log, returning the map to blank.</p>
+
+<script>
+  var ENDPOINT="https://script.google.com/macros/s/AKfycbzHKJ38Y50C3T-kQUgRznw61EcM8rx4Gg5sPXEJNI8cpl2khv-FkwFx08hoNvZI_9vK/exec";
+  var RESET_TOKEN="reset-cdo2026";
+  var btn=document.getElementById('reset'), msg=document.getElementById('msg');
+  btn.addEventListener('click',function(){
+    if(!confirm('Reset the demo? This clears the whole map and all questions.')) return;
+    btn.disabled=true; msg.textContent='Resetting…';
+    fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({cmd:'reset',token:RESET_TOKEN})})
+      .catch(function(){})
+      .then(function(){ setTimeout(function(){ msg.textContent='Demo reset ✓  (reload the demo page to see a blank map)'; btn.disabled=false; }, 1200); });
+  });
+</script>
+</body>
+</html>
