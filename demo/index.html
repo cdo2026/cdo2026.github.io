@@ -138,6 +138,12 @@
   function lon2x(lon){ return (lon+180)/360*W; }
   function lat2y(lat){ return (90-lat)/180*H; }
 
+  // reserved overlay for environments with no geographic analogue (open South Pacific)
+  var PANEL={ lonW:-180, lonE:-90, latN:13, latS:-58 };
+  function inPanel(x,y){
+    return x>=lon2x(PANEL.lonW) && x<=lon2x(PANEL.lonE) && y>=lat2y(PANEL.latN) && y<=lat2y(PANEL.latS);
+  }
+
   function drawBase(){
     ctx.fillStyle = getCSS('--sea'); ctx.fillRect(0,0,W,H);
     // land
@@ -204,7 +210,40 @@
     strokeCoast();
     drawGrid();
     drawLabels(probes);
+    drawPanel(probes);
     renderFeed(probes);
+  }
+  function drawPanel(probes){
+    var xL=lon2x(PANEL.lonW), xR=lon2x(PANEL.lonE), yT=lat2y(PANEL.latN), yB=lat2y(PANEL.latS);
+    ctx.fillStyle='rgba(9,20,28,.72)'; ctx.fillRect(xL,yT,xR-xL,yB-yT);
+    ctx.strokeStyle='rgba(199,154,75,.5)'; ctx.lineWidth=1.5;
+    ctx.setLineDash([6,4]); ctx.strokeRect(xL+1,yT+1,xR-xL-2,yB-yT-2); ctx.setLineDash([]);
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    ctx.fillStyle=getCSS('--gold'); ctx.font='bold 14px Georgia,serif';
+    ctx.fillText('NO GEOGRAPHIC HOME', xL+16, yT+24);
+    ctx.fillStyle='rgba(180,200,205,.6)'; ctx.font='11px -apple-system,Arial,sans-serif';
+    ctx.fillText('environments with no place on the map', xL+16, yT+40);
+
+    var items=[];
+    for(var i=0;i<probes.length;i++){ if(probes[i].abstract) items.push({p:probes[i], n:i+1}); }
+    if(!items.length){
+      ctx.fillStyle='rgba(150,170,178,.45)'; ctx.font='italic 12px -apple-system,Arial,sans-serif';
+      ctx.fillText('e.g. soft cheeses, wine, human sweat…', xL+16, yT+66);
+      return;
+    }
+    var padX=16, padTop=60, lineH=25, colW=210, x=xL+padX, y=yT+padTop;
+    for(var m=0;m<items.length;m++){
+      if(y>yB-14){ y=yT+padTop; x+=colW; }
+      var it=items[m], v=(it.p.verdict==='yes'?'yes':'no');
+      ctx.beginPath(); ctx.arc(x+5, y-4, 5, 0, Math.PI*2);
+      ctx.fillStyle = v==='yes'?getCSS('--yes'):getCSS('--no'); ctx.fill();
+      ctx.fillStyle='#eaf1f0'; ctx.font='13px -apple-system,Arial,sans-serif';
+      ctx.fillText(it.n+'. '+(it.p.env||it.p.q||''), x+16, y);
+      _labels.push({ rect:[x-2, y-16, x+colW-12, y+7],
+        info:{ num:it.n, q:(it.p.q||it.p.env||''), verdict:it.p.verdict,
+               place:'no geographic analogue', note:(it.p.note||'') } });
+      y+=lineH;
+    }
   }
   function drawLabels(probes){
     for(var i=0;i<probes.length;i++){
@@ -226,7 +265,9 @@
             if(d<bd){ bd=d; best=comp[k]; }
           }
           var rr=cellRect(best[0],best[1]);
-          badge(rr[0]+rr[2]/2, rr[1]+rr[3]/2, i+1, p.verdict,
+          var bx=rr[0]+rr[2]/2, by=rr[1]+rr[3]/2;
+          if(inPanel(bx,by)) continue;   // keep the reserved overlay clear of map badges
+          badge(bx, by, i+1, p.verdict,
                 {num:i+1, q:(p.q||p.env||''), verdict:p.verdict, place:(pl.label||''), note:(p.note||'')});
         }
       }
@@ -339,8 +380,13 @@
       var mx=(e.clientX-rect.left)*sx, my=(e.clientY-rect.top)*sy;
       var hitR=13*sx, found=null, bd=hitR*hitR;
       for(var k=0;k<_labels.length;k++){
-        var dx=_labels[k].x-mx, dy=_labels[k].y-my, d=dx*dx+dy*dy;
-        if(d<bd){ bd=d; found=_labels[k].info; }
+        var L=_labels[k];
+        if(L.rect){
+          if(mx>=L.rect[0]&&mx<=L.rect[2]&&my>=L.rect[1]&&my<=L.rect[3]){ found=L.info; break; }
+        } else {
+          var dx=L.x-mx, dy=L.y-my, d=dx*dx+dy*dy;
+          if(d<bd){ bd=d; found=L.info; }
+        }
       }
       if(found){
         var v=(found.verdict==='yes'?'yes':'no');
