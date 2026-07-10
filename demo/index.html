@@ -62,6 +62,13 @@
   }
   .ask button:hover{ filter:brightness(1.08); }
   .hint{ text-align:center; font-size:12px; color:#6f858f; margin-top:10px; }
+  .sugs{ text-align:center; margin-top:12px; font-size:12px; color:#6f858f; }
+  .sugl{ letter-spacing:.4px; margin-right:4px; }
+  .sug{ display:inline-block; margin:4px 4px; padding:5px 13px; border:1px solid rgba(199,154,75,.3);
+        border-radius:20px; color:#cfe6e1; cursor:pointer; background:rgba(255,255,255,.03);
+        font-size:12px; transition:border-color .15s,color .15s; }
+  .sug:hover{ border-color:var(--gold); color:#f4f1e8; }
+  .sugs.quiet .sugl{ color:var(--gold); font-weight:700; }
 
   .ticker{ max-width:820px; margin:26px auto 0; }
   .ticker h4{ font-size:10px; letter-spacing:2.2px; text-transform:uppercase; color:var(--teal);
@@ -114,6 +121,7 @@
         <button type="submit">Ask</button>
       </form>
       <div class="hint">Your question goes to the room. The map updates as each environment is resolved.</div>
+      <div class="sugs" id="sugs"><span class="sugl" id="sugl">Need ideas?</span><span id="sugchips"></span></div>
     </div>
 
     <div class="ticker">
@@ -325,9 +333,11 @@
   function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 
   // ---- live loop ----
-  var lastStamp=null;
+  var lastStamp=null, _lastCount=-1, _lastActivity=Date.now();
   function applyState(s){
     setStatus(s?('live &middot; '+(((s.probes||[]).length))+' probed'):'waiting for map state');
+    var n=(s&&s.probes)?s.probes.length:0;
+    if(n!==_lastCount){ _lastCount=n; _lastActivity=Date.now(); }
     if(s && s.updated!==lastStamp){ lastStamp=s.updated; render(s); }
   }
   function poll(){
@@ -352,15 +362,16 @@
   }
   function setStatus(t){ document.getElementById('status').innerHTML=t; }
 
-  document.getElementById('askform').addEventListener('submit',function(e){
-    e.preventDefault();
-    var inp=document.getElementById('q'); var q=inp.value.trim(); if(!q) return;
-    inp.value='';
-    // optimistic local echo
+  function submitQuestion(q){
+    q=(q||'').trim(); if(!q) return;
     optimistic(q);
     if(ENDPOINT){
       fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({q:q})}).catch(function(){});
     }
+  }
+  document.getElementById('askform').addEventListener('submit',function(e){
+    e.preventDefault();
+    var inp=document.getElementById('q'); submitQuestion(inp.value); inp.value='';
   });
   var pending=[];
   function optimistic(q){
@@ -404,6 +415,52 @@
     });
     cv.addEventListener('mouseleave',function(){ tip.style.display='none'; cv.style.cursor='default'; });
   })();
+
+  // ---- suggestion hints (facilitation) ----
+  var HINTS=[
+    "alpine tarns","glacial meltwater streams","mountain springs","limestone cave pools",
+    "temperate peat bogs","highland rice paddies","kettle ponds","spring-fed creeks",
+    "subalpine lakes","forest vernal pools","sphagnum moss mats","cloud-forest streams",
+    "tundra ponds","cranberry bogs","watercress beds","cold trout streams","Scottish lochs",
+    "Canadian Shield lakes","Patagonian lakes","Himalayan glacial lakes","Nordic lakes",
+    "fjord meltwater","New Zealand alpine tarns","cave drip pools","montane fens","boreal muskeg",
+    "snowmelt puddles","karst springs","upland reservoirs","beaver ponds","quaking bogs",
+    "artesian springs","mountain marshes",
+    "tropical lagoons","equatorial rivers","hot springs","geysers","monsoon floodplains",
+    "mangrove swamps","coral reefs","tropical rice paddies","warm springs","the Congo River",
+    "the Nile","tropical crater lakes","jungle streams","billabongs","tropical peat swamps",
+    "salt flats","soda lakes","the Dead Sea","salt marshes","coastal lagoons","the Great Salt Lake",
+    "brine pools","sea-ice brine channels","ocean gyres","kelp forests","tidal estuaries",
+    "salt pans","hypersaline ponds","the Caspian Sea","the Aral Sea","the open ocean",
+    "acid crater lakes","volcanic hot pools","Antarctic dry valleys","deep-sea trenches","fumaroles",
+    "geothermal springs","boiling mud pots","the Danakil Depression","sulfur springs","the Atacama core",
+    "aquaponics tanks","bioreactors","cooling towers","wastewater treatment ponds",
+    "drinking-water reservoirs","public aquariums","fish hatcheries","spacecraft water recycling",
+    "green roofs","rain gardens","storm drains","canal locks","ship ballast tanks","irrigation canals",
+    "garden ponds","swimming pools","fountains","water towers","cisterns","recirculating aquaculture",
+    "greenhouse misting systems","cell-culture bioreactors","decorative koi ponds",
+    "kombucha","yogurt","beer","sourdough starter","compost heaps","blood plasma","saliva","tears",
+    "tree sap","honey","maple syrup","milk","pickle brine","fish sauce","the human gut","mucus",
+    "fermentation vats","petri dishes","nutrient agar",
+    "Europa's subsurface ocean","Enceladus water plumes","Martian brine seeps","lunar polar ice",
+    "Titan's methane lakes","Martian polar caps"
+  ];
+  function pickHints(n){ var a=HINTS.slice(), out=[]; while(out.length<n && a.length){ out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]); } return out; }
+  function renderHints(){
+    var c=document.getElementById('sugchips'), hs=pickHints(4), html='';
+    for(var i=0;i<hs.length;i++) html+='<span class="sug">'+esc(hs[i])+'</span>';
+    c.innerHTML=html;
+    var chips=c.getElementsByClassName('sug');
+    for(var i=0;i<chips.length;i++){ (function(el){ el.addEventListener('click',function(){ submitQuestion(el.textContent); }); })(chips[i]); }
+  }
+  renderHints();
+  setInterval(renderHints, 12000);
+  setInterval(function(){
+    var quiet=(Date.now()-_lastActivity>30000);
+    var sugs=document.getElementById('sugs'), sugl=document.getElementById('sugl');
+    if(quiet){ if(!sugs.classList.contains('quiet')){ sugs.classList.add('quiet'); renderHints(); } sugl.textContent='Quiet moment — try one:'; }
+    else { sugs.classList.remove('quiet'); sugl.textContent='Need ideas?'; }
+  }, 5000);
 
   // ---- boot ----
   render(null);
