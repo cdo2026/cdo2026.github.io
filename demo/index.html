@@ -571,13 +571,18 @@
     "tree sap","honey","maple syrup","milk","pickle brine","fish sauce","the human gut","mucus",
     "fermentation vats","petri dishes","nutrient agar"
   ];
-  function pickHints(n){ var a=HINTS.slice(), out=[]; while(out.length<n && a.length){ out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]); } return out; }
+  var usedHints={};
+  function pickHints(n){
+    var a=HINTS.filter(function(h){ return !usedHints[h]; }), out=[];
+    while(out.length<n && a.length){ out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]); }
+    return out;
+  }
   function renderHints(){
     var c=document.getElementById('sugchips'), hs=pickHints(4), html='';
     for(var i=0;i<hs.length;i++) html+='<span class="sug">'+esc(hs[i])+'</span>';
     c.innerHTML=html;
     var chips=c.getElementsByClassName('sug');
-    for(var i=0;i<chips.length;i++){ (function(el){ el.addEventListener('click',function(){ submitQuestion(el.textContent); }); })(chips[i]); }
+    for(var i=0;i<chips.length;i++){ (function(el){ el.addEventListener('click',function(){ usedHints[el.textContent]=1; submitQuestion(el.textContent); renderHints(); }); })(chips[i]); }
   }
   renderHints();
   setInterval(renderHints, 12000);
