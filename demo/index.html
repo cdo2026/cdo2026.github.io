@@ -194,10 +194,44 @@
     for(var i=0;i<probes.length;i++){
       var p=probes[i]; if(!p.cells||!p.cells.length) continue;
       if(p.verdict!=='yes'&&p.verdict!=='no') continue;
-      var sx=0,sy=0;
-      for(var j=0;j<p.cells.length;j++){ var r=cellRect(p.cells[j][0],p.cells[j][1]); sx+=r[0]+r[2]/2; sy+=r[1]+r[3]/2; }
-      badge(sx/p.cells.length, sy/p.cells.length, i+1, p.verdict);
+      var comps=components(p.cells);
+      comps.sort(function(a,b){ return b.length-a.length; });
+      var cap=Math.min(comps.length, 60);
+      for(var c=0;c<cap;c++){
+        var comp=comps[c]; if(comp.length<2) continue;   // skip stray single cells
+        var sc=0,sr=0;
+        for(var k=0;k<comp.length;k++){ sc+=comp[k][0]; sr+=comp[k][1]; }
+        var cc=sc/comp.length, cr=sr/comp.length;
+        var best=comp[0], bd=1e9;                          // snap badge to a real cell in the patch
+        for(var k=0;k<comp.length;k++){
+          var d=(comp[k][0]-cc)*(comp[k][0]-cc)+(comp[k][1]-cr)*(comp[k][1]-cr);
+          if(d<bd){ bd=d; best=comp[k]; }
+        }
+        var rr=cellRect(best[0],best[1]);
+        badge(rr[0]+rr[2]/2, rr[1]+rr[3]/2, i+1, p.verdict);
+      }
     }
+  }
+  function components(cells){
+    var set={}, ncol=360/GRID;
+    for(var i=0;i<cells.length;i++){ set[cells[i][0]+','+cells[i][1]]=cells[i]; }
+    var seen={}, out=[];
+    for(var i=0;i<cells.length;i++){
+      var k0=cells[i][0]+','+cells[i][1]; if(seen[k0]) continue;
+      var stack=[cells[i]], comp=[]; seen[k0]=1;
+      while(stack.length){
+        var cur=stack.pop(); comp.push(cur);
+        for(var dc=-1;dc<=1;dc++) for(var dr=-1;dr<=1;dr++){
+          if(dc===0&&dr===0) continue;
+          var nc=cur[0]+dc, nr=cur[1]+dr;
+          if(nc<0) nc+=ncol; else if(nc>=ncol) nc-=ncol;   // wrap longitude
+          var nk=nc+','+nr;
+          if(set[nk] && !seen[nk]){ seen[nk]=1; stack.push(set[nk]); }
+        }
+      }
+      out.push(comp);
+    }
+    return out;
   }
   function badge(x,y,n,verdict){
     var R=17;
