@@ -177,6 +177,7 @@
   }
 
   var _labels=[], _probes=[];   // hit-testing for hover tooltips
+  function placesOf(p){ return p.places || (p.cells ? [{label:p.env||'', cells:p.cells}] : []); }
   function render(state){
     if(state && state.grid){ GRID = state.grid; }
     drawBase();
@@ -185,12 +186,15 @@
     // aggregate per cell; green always wins over red, regardless of probe order
     var cv={};
     for(var i=0;i<probes.length;i++){
-      var p=probes[i]; if(!p.cells) continue;
-      if(p.verdict!=='yes' && p.verdict!=='no') continue;
-      for(var j=0;j<p.cells.length;j++){
-        var k=p.cells[j][0]+','+p.cells[j][1];
-        if(p.verdict==='yes') cv[k]='yes';
-        else if(cv[k]!=='yes') cv[k]='no';
+      var p=probes[i]; if(p.verdict!=='yes' && p.verdict!=='no') continue;
+      var pls=placesOf(p);
+      for(var q=0;q<pls.length;q++){
+        var cs=pls[q].cells||[];
+        for(var j=0;j<cs.length;j++){
+          var k=cs[j][0]+','+cs[j][1];
+          if(p.verdict==='yes') cv[k]='yes';
+          else if(cv[k]!=='yes') cv[k]='no';
+        }
       }
     }
     var yes=[], no=[];
@@ -204,23 +208,27 @@
   }
   function drawLabels(probes){
     for(var i=0;i<probes.length;i++){
-      var p=probes[i]; if(!p.cells||!p.cells.length) continue;
-      if(p.verdict!=='yes'&&p.verdict!=='no') continue;
-      var comps=components(p.cells);
-      comps.sort(function(a,b){ return b.length-a.length; });
-      var cap=Math.min(comps.length, 60);
-      for(var c=0;c<cap;c++){
-        var comp=comps[c]; if(comp.length<2) continue;   // skip stray single cells
-        var sc=0,sr=0;
-        for(var k=0;k<comp.length;k++){ sc+=comp[k][0]; sr+=comp[k][1]; }
-        var cc=sc/comp.length, cr=sr/comp.length;
-        var best=comp[0], bd=1e9;                          // snap badge to a real cell in the patch
-        for(var k=0;k<comp.length;k++){
-          var d=(comp[k][0]-cc)*(comp[k][0]-cc)+(comp[k][1]-cr)*(comp[k][1]-cr);
-          if(d<bd){ bd=d; best=comp[k]; }
+      var p=probes[i]; if(p.verdict!=='yes'&&p.verdict!=='no') continue;
+      var pls=placesOf(p);
+      for(var pj=0;pj<pls.length;pj++){
+        var pl=pls[pj]; if(!pl.cells||!pl.cells.length) continue;
+        var comps=components(pl.cells);
+        comps.sort(function(a,b){ return b.length-a.length; });
+        var cap=Math.min(comps.length, 40);
+        for(var c=0;c<cap;c++){
+          var comp=comps[c];
+          var sc=0,sr=0;
+          for(var k=0;k<comp.length;k++){ sc+=comp[k][0]; sr+=comp[k][1]; }
+          var cc=sc/comp.length, cr=sr/comp.length;
+          var best=comp[0], bd=1e9;                          // snap badge to a real cell in the patch
+          for(var k=0;k<comp.length;k++){
+            var d=(comp[k][0]-cc)*(comp[k][0]-cc)+(comp[k][1]-cr)*(comp[k][1]-cr);
+            if(d<bd){ bd=d; best=comp[k]; }
+          }
+          var rr=cellRect(best[0],best[1]);
+          badge(rr[0]+rr[2]/2, rr[1]+rr[3]/2, i+1, p.verdict,
+                {num:i+1, q:(p.q||p.env||''), verdict:p.verdict, place:(pl.label||''), note:(p.note||'')});
         }
-        var rr=cellRect(best[0],best[1]);
-        badge(rr[0]+rr[2]/2, rr[1]+rr[3]/2, i+1, p.verdict);
       }
     }
   }
@@ -245,8 +253,8 @@
     }
     return out;
   }
-  function badge(x,y,n,verdict){
-    _labels.push({x:x, y:y, idx:n-1});
+  function badge(x,y,n,verdict,info){
+    _labels.push({x:x, y:y, info:info});
     ctx.font='bold 10px Georgia,serif';
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.lineJoin='round'; ctx.lineWidth=2.5; ctx.strokeStyle='rgba(11,26,36,.9)';
@@ -329,16 +337,17 @@
       var rect=cv.getBoundingClientRect();
       var sx=cv.width/rect.width, sy=cv.height/rect.height;
       var mx=(e.clientX-rect.left)*sx, my=(e.clientY-rect.top)*sy;
-      var hitR=13*sx, found=-1, bd=hitR*hitR;
+      var hitR=13*sx, found=null, bd=hitR*hitR;
       for(var k=0;k<_labels.length;k++){
         var dx=_labels[k].x-mx, dy=_labels[k].y-my, d=dx*dx+dy*dy;
-        if(d<bd){ bd=d; found=_labels[k].idx; }
+        if(d<bd){ bd=d; found=_labels[k].info; }
       }
-      if(found>=0 && _probes[found]){
-        var p=_probes[found], v=(p.verdict==='yes'?'yes':'no');
+      if(found){
+        var v=(found.verdict==='yes'?'yes':'no');
         tip.innerHTML='<div class="th"><span class="tv '+v+'">'+(v==='yes'?'Survivable':'Not survivable')
-          +'</span> '+(found+1)+'. '+esc(p.env||p.q||'')+'</div>'
-          +(p.note?'<div class="tn">'+esc(p.note)+'</div>':'');
+          +'</span> '+found.num+'. &ldquo;'+esc(found.q)+'&rdquo;</div>'
+          +(found.place?'<div class="tn"><b style="color:#eaf1f0">'+esc(found.place)+'</b></div>':'')
+          +(found.note?'<div class="tn">'+esc(found.note)+'</div>':'');
         tip.style.display='block';
         var lx=(e.clientX-rect.left)+15, ly=(e.clientY-rect.top)+15;
         if(lx+tip.offsetWidth>rect.width) lx=(e.clientX-rect.left)-tip.offsetWidth-15;
