@@ -546,30 +546,27 @@
 
   // ---- suggestion hints (facilitation) ----
   var HINTS=[
-    "alpine tarns","glacial meltwater streams","mountain springs","limestone cave pools",
-    "temperate peat bogs","highland rice paddies","kettle ponds","spring-fed creeks",
-    "subalpine lakes","forest vernal pools","sphagnum moss mats","cloud-forest streams",
-    "tundra ponds","cranberry bogs","watercress beds","cold trout streams","Scottish lochs",
-    "Canadian Shield lakes","Patagonian lakes","Himalayan glacial lakes","Nordic lakes",
-    "fjord meltwater","New Zealand alpine tarns","cave drip pools","montane fens","boreal muskeg",
-    "snowmelt puddles","karst springs","upland reservoirs","beaver ponds","quaking bogs",
-    "artesian springs","mountain marshes",
-    "tropical lagoons","equatorial rivers","hot springs","geysers","monsoon floodplains",
-    "mangrove swamps","coral reefs","tropical rice paddies","warm springs","the Congo River",
-    "the Nile","tropical crater lakes","jungle streams","billabongs","tropical peat swamps",
-    "salt flats","soda lakes","the Dead Sea","salt marshes","coastal lagoons","the Great Salt Lake",
-    "brine pools","sea-ice brine channels","ocean gyres","kelp forests","tidal estuaries",
-    "salt pans","hypersaline ponds","the Caspian Sea","the Aral Sea","the open ocean",
-    "acid crater lakes","volcanic hot pools","Antarctic dry valleys","deep-sea trenches","fumaroles",
-    "geothermal springs","boiling mud pots","the Danakil Depression","sulfur springs","the Atacama core",
-    "aquaponics tanks","bioreactors","cooling towers","wastewater treatment ponds",
-    "drinking-water reservoirs","public aquariums","fish hatcheries","spacecraft water recycling",
-    "green roofs","rain gardens","storm drains","canal locks","ship ballast tanks","irrigation canals",
-    "garden ponds","swimming pools","fountains","water towers","cisterns","recirculating aquaculture",
-    "greenhouse misting systems","cell-culture bioreactors","decorative koi ponds",
-    "kombucha","yogurt","beer","sourdough starter","compost heaps","blood plasma","saliva","tears",
-    "tree sap","honey","maple syrup","milk","pickle brine","fish sauce","the human gut","mucus",
-    "fermentation vats","petri dishes","nutrient agar"
+    // --- xenobot-friendly: cold/cool, fresh, near-neutral, liquid (majority) ---
+    "alpine tarns","subalpine lakes","glacial lakes","kettle ponds","cirque lakes","moraine ponds",
+    "Nordic lakes","Canadian Shield lakes","Patagonian lakes","Scottish lochs","Finnish lakes",
+    "boreal lakes","highland lakes","cold mountain lakes","Himalayan glacial lakes","New Zealand alpine tarns",
+    "mountain springs","spring-fed creeks","chalk streams","cold trout streams","glacial meltwater streams",
+    "snowmelt streams","watercress beds","karst springs","artesian springs","upland brooks","cave streams",
+    "cold headwater streams","forest streams","fjord meltwater streams","cloud-forest streams",
+    "sphagnum moss mats","peat bogs","cranberry bogs","montane fens","boreal muskeg","quaking bogs",
+    "blanket bogs","mountain marshes","wet meadows","forest vernal pools","tundra ponds","highland tarns",
+    "arctic meltwater pools","tundra thaw ponds","permafrost thaw ponds","ice-margin lakes","glacial pools",
+    "subarctic streams","snowfield meltwater","beaver ponds","oxbow lakes","glacial flour lakes",
+    "kettle-hole ponds","corrie lochs","dew ponds","limestone cave pools","cave drip pools",
+    "cool groundwater seeps","fish hatcheries","trout farms","hydroponic farms","vertical farms",
+    "aquaponics tanks","drinking-water reservoirs","upland reservoirs","garden ponds","rain gardens",
+    "freshwater aquariums","highland rice paddies","terraced paddies",
+    // --- hostile / exotic, kept for contrast (minority) ---
+    "hot springs","geysers","the Dead Sea","soda lakes","salt flats","mangrove swamps","coral reefs",
+    "hydrothermal vents","deep-sea trenches","tropical lagoons","the open ocean","brine pools","tide pools",
+    "kelp forests","equatorial rivers","warm springs","fumaroles","tropical crater lakes","salt marshes",
+    "tidal estuaries","cooling towers","storm drains","irrigation canals","the Great Salt Lake",
+    "kombucha","honey","maple syrup","human sweat"
   ];
   var usedHints={};
   function pickHints(n){
