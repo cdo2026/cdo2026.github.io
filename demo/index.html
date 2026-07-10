@@ -39,6 +39,11 @@
   #tip .tv.yes{ background:rgba(55,214,122,.18); color:var(--yes); }
   #tip .tv.no{ background:rgba(229,83,75,.18); color:var(--no); }
   #tip .tn{ color:var(--muted); font-size:11.5px; line-height:1.45; }
+  .zoomctl{ position:absolute; top:12px; left:12px; z-index:5; display:flex; flex-direction:column; gap:6px; }
+  .zoomctl button{ width:34px; height:34px; border-radius:8px; border:1px solid rgba(199,154,75,.4);
+    background:rgba(11,26,36,.8); color:#f4f1e8; font-size:18px; font-weight:700; cursor:pointer;
+    line-height:1; display:flex; align-items:center; justify-content:center; padding:0; }
+  .zoomctl button:hover{ border-color:var(--gold); background:rgba(11,26,36,.95); }
 
   .legend{ display:flex; gap:18px; align-items:center; justify-content:center; flex-wrap:wrap;
            margin:14px 0 4px; font-size:12.5px; color:var(--muted); }
@@ -106,6 +111,11 @@
     <div class="mapwrap">
       <canvas id="map" width="1440" height="720"></canvas>
       <div id="tip"></div>
+      <div class="zoomctl">
+        <button id="zin" title="Zoom in">+</button>
+        <button id="zout" title="Zoom out">&minus;</button>
+        <button id="zreset" title="Reset view">&#8634;</button>
+      </div>
     </div>
 
     <div class="legend">
@@ -192,13 +202,25 @@
 
   var _labels=[], _probes=[];   // hit-testing for hover tooltips
   function placesOf(p){ return p.places || (p.cells ? [{label:p.env||'', cells:p.cells}] : []); }
-  function render(state){
+  var _state=null, VIEW={zoom:1, panX:0, panY:0};
+  function clampView(){
+    if(VIEW.zoom<1) VIEW.zoom=1; if(VIEW.zoom>8) VIEW.zoom=8;
+    var minX=W*(1-VIEW.zoom), minY=H*(1-VIEW.zoom);
+    if(VIEW.panX>0) VIEW.panX=0; if(VIEW.panX<minX) VIEW.panX=minX;
+    if(VIEW.panY>0) VIEW.panY=0; if(VIEW.panY<minY) VIEW.panY=minY;
+  }
+  function render(state){ _state=state; draw(); }
+  function draw(){
+    var state=_state;
     if(state && state.grid){ GRID = state.grid; }
+    ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,W,H);
+    clampView();
+    ctx.setTransform(VIEW.zoom,0,0,VIEW.zoom,VIEW.panX,VIEW.panY);
     drawBase();
     var probes = (state && state.probes) || [];
     _probes = probes; _labels = [];
     // aggregate per cell; green always wins over red, regardless of probe order
-    var cv={};
+    var agg={};
     for(var i=0;i<probes.length;i++){
       var p=probes[i]; if(p.verdict!=='yes' && p.verdict!=='no') continue;
       var pls=placesOf(p);
@@ -206,19 +228,20 @@
         var cs=pls[q].cells||[];
         for(var j=0;j<cs.length;j++){
           var k=cs[j][0]+','+cs[j][1];
-          if(p.verdict==='yes') cv[k]='yes';
-          else if(cv[k]!=='yes') cv[k]='no';
+          if(p.verdict==='yes') agg[k]='yes';
+          else if(agg[k]!=='yes') agg[k]='no';
         }
       }
     }
     var yes=[], no=[];
-    for(var key in cv){ if(!cv.hasOwnProperty(key)) continue;
-      var xy=key.split(','), cc=[+xy[0],+xy[1]]; (cv[key]==='yes'?yes:no).push(cc); }
+    for(var key in agg){ if(!agg.hasOwnProperty(key)) continue;
+      var xy=key.split(','), cc=[+xy[0],+xy[1]]; (agg[key]==='yes'?yes:no).push(cc); }
     paintCells(no,'no'); paintCells(yes,'yes');
     strokeCoast();
     drawGrid();
     drawLabels(probes);
     drawPanel(probes);
+    ctx.setTransform(1,0,0,1,0,0);
     renderFeed(probes);
   }
   function drawPanel(probes){
@@ -382,22 +405,28 @@
     feed.insertBefore(li,feed.firstChild);
   }
 
-  // ---- hover tooltips on placed numbers ----
+  // ---- hover tooltips + pan / zoom ----
   (function(){
     var tip=document.getElementById('tip');
+    var dragging=false, lastX=0, lastY=0;
+    function geom(e){ var rect=cv.getBoundingClientRect(), sx=cv.width/rect.width, sy=cv.height/rect.height;
+      return { rect:rect, sx:sx, sy:sy, cx:(e.clientX-rect.left)*sx, cy:(e.clientY-rect.top)*sy }; }
+
+    cv.addEventListener('mousedown',function(e){ dragging=true; lastX=e.clientX; lastY=e.clientY; cv.style.cursor='grabbing'; tip.style.display='none'; });
+    window.addEventListener('mouseup',function(){ if(dragging){ dragging=false; cv.style.cursor='grab'; } });
+
     cv.addEventListener('mousemove',function(e){
-      var rect=cv.getBoundingClientRect();
-      var sx=cv.width/rect.width, sy=cv.height/rect.height;
-      var mx=(e.clientX-rect.left)*sx, my=(e.clientY-rect.top)*sy;
-      var hitR=13*sx, found=null, bd=hitR*hitR;
+      var g=geom(e);
+      if(dragging){
+        VIEW.panX+=(e.clientX-lastX)*g.sx; VIEW.panY+=(e.clientY-lastY)*g.sy;
+        lastX=e.clientX; lastY=e.clientY; clampView(); draw(); return;
+      }
+      var wx=(g.cx-VIEW.panX)/VIEW.zoom, wy=(g.cy-VIEW.panY)/VIEW.zoom;
+      var hitR=13*g.sx/VIEW.zoom, found=null, bd=hitR*hitR;
       for(var k=0;k<_labels.length;k++){
         var L=_labels[k];
-        if(L.rect){
-          if(mx>=L.rect[0]&&mx<=L.rect[2]&&my>=L.rect[1]&&my<=L.rect[3]){ found=L.info; break; }
-        } else {
-          var dx=L.x-mx, dy=L.y-my, d=dx*dx+dy*dy;
-          if(d<bd){ bd=d; found=L.info; }
-        }
+        if(L.rect){ if(wx>=L.rect[0]&&wx<=L.rect[2]&&wy>=L.rect[1]&&wy<=L.rect[3]){ found=L.info; break; } }
+        else { var dx=L.x-wx, dy=L.y-wy, d=dx*dx+dy*dy; if(d<bd){ bd=d; found=L.info; } }
       }
       if(found){
         var v=(found.verdict==='yes'?'yes':'no');
@@ -406,14 +435,28 @@
           +(found.place?'<div class="tn"><b style="color:#eaf1f0">'+esc(found.place)+'</b></div>':'')
           +(found.note?'<div class="tn">'+esc(found.note)+'</div>':'');
         tip.style.display='block';
-        var lx=(e.clientX-rect.left)+15, ly=(e.clientY-rect.top)+15;
-        if(lx+tip.offsetWidth>rect.width) lx=(e.clientX-rect.left)-tip.offsetWidth-15;
-        if(ly+tip.offsetHeight>rect.height) ly=(e.clientY-rect.top)-tip.offsetHeight-15;
+        var lx=(e.clientX-g.rect.left)+15, ly=(e.clientY-g.rect.top)+15;
+        if(lx+tip.offsetWidth>g.rect.width) lx=(e.clientX-g.rect.left)-tip.offsetWidth-15;
+        if(ly+tip.offsetHeight>g.rect.height) ly=(e.clientY-g.rect.top)-tip.offsetHeight-15;
         tip.style.left=lx+'px'; tip.style.top=Math.max(0,ly)+'px';
         cv.style.cursor='pointer';
-      } else { tip.style.display='none'; cv.style.cursor='default'; }
+      } else { tip.style.display='none'; cv.style.cursor='grab'; }
     });
-    cv.addEventListener('mouseleave',function(){ tip.style.display='none'; cv.style.cursor='default'; });
+    cv.addEventListener('mouseleave',function(){ tip.style.display='none'; cv.style.cursor='grab'; });
+
+    cv.addEventListener('wheel',function(e){
+      e.preventDefault(); var g=geom(e);
+      var wx=(g.cx-VIEW.panX)/VIEW.zoom, wy=(g.cy-VIEW.panY)/VIEW.zoom;
+      VIEW.zoom*=(e.deltaY<0?1.15:1/1.15); clampView();
+      VIEW.panX=g.cx-wx*VIEW.zoom; VIEW.panY=g.cy-wy*VIEW.zoom; clampView(); draw();
+    },{passive:false});
+
+    function zoomCenter(f){ var wx=(W/2-VIEW.panX)/VIEW.zoom, wy=(H/2-VIEW.panY)/VIEW.zoom;
+      VIEW.zoom*=f; clampView(); VIEW.panX=W/2-wx*VIEW.zoom; VIEW.panY=H/2-wy*VIEW.zoom; clampView(); draw(); }
+    document.getElementById('zin').addEventListener('click',function(){ zoomCenter(1.4); });
+    document.getElementById('zout').addEventListener('click',function(){ zoomCenter(1/1.4); });
+    document.getElementById('zreset').addEventListener('click',function(){ VIEW.zoom=1; VIEW.panX=0; VIEW.panY=0; draw(); });
+    cv.style.cursor='grab';
   })();
 
   // ---- suggestion hints (facilitation) ----
