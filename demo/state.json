@@ -1,0 +1,70 @@
+{
+ "updated": "sample-1",
+ "grid": 4,
+ "probes": [
+  {
+   "env": "Brackish water",
+   "q": "Can xenobots live in brackish water?",
+   "verdict": "yes",
+   "note": "salinity 0.5\u201330 ppt sits within tolerance (sample data)",
+   "cells": [
+    [
+     50,
+     8
+    ],
+    [
+     51,
+     8
+    ],
+    [
+     50,
+     7
+    ],
+    [
+     53,
+     11
+    ],
+    [
+     54,
+     11
+    ],
+    [
+     52,
+     11
+    ]
+   ]
+  },
+  {
+   "env": "Hot desert surface",
+   "q": "Can xenobots survive in the Sahara?",
+   "verdict": "no",
+   "note": "surface temps far exceed upper thermal limit (sample data)",
+   "cells": [
+    [
+     47,
+     16
+    ],
+    [
+     48,
+     16
+    ],
+    [
+     49,
+     16
+    ],
+    [
+     50,
+     16
+    ],
+    [
+     48,
+     17
+    ],
+    [
+     49,
+     17
+    ]
+   ]
+  }
+ ]
+}
