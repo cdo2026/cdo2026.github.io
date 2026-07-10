@@ -31,6 +31,14 @@
   .mapwrap{ position:relative; border:1px solid var(--line); border-radius:12px; overflow:hidden;
             box-shadow:0 18px 50px rgba(0,0,0,.45); background:var(--sea); }
   canvas{ display:block; width:100%; height:auto; }
+  #tip{ position:absolute; pointer-events:none; z-index:6; max-width:250px; display:none;
+        background:rgba(11,26,36,.97); border:1px solid rgba(199,154,75,.35); border-radius:8px;
+        padding:9px 11px; box-shadow:0 10px 26px rgba(0,0,0,.55); }
+  #tip .th{ font-size:13px; color:#f4f1e8; font-weight:700; display:flex; gap:7px; align-items:center; margin-bottom:4px; }
+  #tip .tv{ font-size:9px; font-weight:800; letter-spacing:1px; text-transform:uppercase; padding:2px 7px; border-radius:20px; flex:none; }
+  #tip .tv.yes{ background:rgba(55,214,122,.18); color:var(--yes); }
+  #tip .tv.no{ background:rgba(229,83,75,.18); color:var(--no); }
+  #tip .tn{ color:var(--muted); font-size:11.5px; line-height:1.45; }
 
   .legend{ display:flex; gap:18px; align-items:center; justify-content:center; flex-wrap:wrap;
            margin:14px 0 4px; font-size:12.5px; color:var(--muted); }
@@ -90,6 +98,7 @@
   <main>
     <div class="mapwrap">
       <canvas id="map" width="1440" height="720"></canvas>
+      <div id="tip"></div>
     </div>
 
     <div class="legend">
@@ -167,10 +176,12 @@
     }
   }
 
+  var _labels=[], _probes=[];   // hit-testing for hover tooltips
   function render(state){
     if(state && state.grid){ GRID = state.grid; }
     drawBase();
     var probes = (state && state.probes) || [];
+    _probes = probes; _labels = [];
     // aggregate per cell; green always wins over red, regardless of probe order
     var cv={};
     for(var i=0;i<probes.length;i++){
@@ -235,6 +246,7 @@
     return out;
   }
   function badge(x,y,n,verdict){
+    _labels.push({x:x, y:y, idx:n-1});
     ctx.font='bold 10px Georgia,serif';
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.lineJoin='round'; ctx.lineWidth=2.5; ctx.strokeStyle='rgba(11,26,36,.9)';
@@ -309,6 +321,34 @@
     li.innerHTML='<span class="qnum">&middot;</span><span class="tag pending">Resolving</span><span class="q">'+esc(q)+'</span>';
     feed.insertBefore(li,feed.firstChild);
   }
+
+  // ---- hover tooltips on placed numbers ----
+  (function(){
+    var tip=document.getElementById('tip');
+    cv.addEventListener('mousemove',function(e){
+      var rect=cv.getBoundingClientRect();
+      var sx=cv.width/rect.width, sy=cv.height/rect.height;
+      var mx=(e.clientX-rect.left)*sx, my=(e.clientY-rect.top)*sy;
+      var hitR=13*sx, found=-1, bd=hitR*hitR;
+      for(var k=0;k<_labels.length;k++){
+        var dx=_labels[k].x-mx, dy=_labels[k].y-my, d=dx*dx+dy*dy;
+        if(d<bd){ bd=d; found=_labels[k].idx; }
+      }
+      if(found>=0 && _probes[found]){
+        var p=_probes[found], v=(p.verdict==='yes'?'yes':'no');
+        tip.innerHTML='<div class="th"><span class="tv '+v+'">'+(v==='yes'?'Survivable':'Not survivable')
+          +'</span> '+(found+1)+'. '+esc(p.env||p.q||'')+'</div>'
+          +(p.note?'<div class="tn">'+esc(p.note)+'</div>':'');
+        tip.style.display='block';
+        var lx=(e.clientX-rect.left)+15, ly=(e.clientY-rect.top)+15;
+        if(lx+tip.offsetWidth>rect.width) lx=(e.clientX-rect.left)-tip.offsetWidth-15;
+        if(ly+tip.offsetHeight>rect.height) ly=(e.clientY-rect.top)-tip.offsetHeight-15;
+        tip.style.left=lx+'px'; tip.style.top=Math.max(0,ly)+'px';
+        cv.style.cursor='pointer';
+      } else { tip.style.display='none'; cv.style.cursor='default'; }
+    });
+    cv.addEventListener('mouseleave',function(){ tip.style.display='none'; cv.style.cursor='default'; });
+  })();
 
   // ---- boot ----
   render(null);
