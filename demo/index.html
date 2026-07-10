@@ -151,8 +151,16 @@
     return [x,y,w,h];
   }
   function paintCells(cells,kind){
-    ctx.fillStyle = kind==='yes' ? hexa(getCSS('--yes'),.55) : hexa(getCSS('--no'),.55);
+    ctx.fillStyle = kind==='yes' ? hexa(getCSS('--yes'),.38) : hexa(getCSS('--no'),.38);
     for(var i=0;i<cells.length;i++){ var r=cellRect(cells[i][0],cells[i][1]); ctx.fillRect(r[0],r[1],r[2],r[3]); }
+  }
+  function strokeCoast(){
+    ctx.strokeStyle='rgba(150,180,190,.45)'; ctx.lineWidth=1;
+    for(var i=0;i<LAND.length;i++){
+      var r=LAND[i]; ctx.beginPath();
+      for(var j=0;j<r.length;j++){ var p=r[j]; var x=lon2x(p[0]), y=lat2y(p[1]); j?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+      ctx.closePath(); ctx.stroke();
+    }
   }
 
   function render(state){
@@ -162,6 +170,7 @@
     for(var i=0;i<probes.length;i++){
       var p=probes[i]; if(p.cells && (p.verdict==='yes'||p.verdict==='no')) paintCells(p.cells,p.verdict);
     }
+    strokeCoast();
     drawGrid();
     renderFeed(probes);
   }
