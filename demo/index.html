@@ -188,14 +188,29 @@
 
   // ---- live loop ----
   var lastStamp=null;
+  function applyState(s){
+    setStatus(s?('live &middot; '+(((s.probes||[]).length))+' probed'):'waiting for map state');
+    if(s && s.updated!==lastStamp){ lastStamp=s.updated; render(s); }
+  }
   function poll(){
-    fetch(STATE_URL+'?t='+Date.now(),{cache:'no-store'})
-      .then(function(r){ return r.ok?r.json():null; })
-      .then(function(s){
-        setStatus(s?('live &middot; '+(((s.probes||[]).length))+' probed'):'waiting for map state');
-        if(s && s.updated!==lastStamp){ lastStamp=s.updated; render(s); }
-      })
-      .catch(function(){ setStatus('offline (front-end only)'); });
+    if(ENDPOINT){
+      jsonp(ENDPOINT+'?t='+Date.now(), applyState, function(){ setStatus('reconnecting&hellip;'); });
+    } else {
+      fetch(STATE_URL+'?t='+Date.now(),{cache:'no-store'})
+        .then(function(r){ return r.ok?r.json():null; })
+        .then(applyState)
+        .catch(function(){ setStatus('offline (front-end only)'); });
+    }
+  }
+  function jsonp(url,ok,err){
+    var cb='__s'+(jsonp._n=(jsonp._n||0)+1)+'_'+Date.now(), done=false;
+    window[cb]=function(d){ done=true; ok(d); cleanup(); };
+    var sc=document.createElement('script');
+    sc.src=url+(url.indexOf('?')<0?'?':'&')+'callback='+cb;
+    sc.onerror=function(){ if(!done&&err){err();} cleanup(); };
+    function cleanup(){ try{delete window[cb];}catch(e){window[cb]=undefined;} if(sc.parentNode)sc.parentNode.removeChild(sc); }
+    document.head.appendChild(sc);
+    setTimeout(function(){ if(!done){ if(err)err(); cleanup(); } },8000);
   }
   function setStatus(t){ document.getElementById('status').innerHTML=t; }
 
