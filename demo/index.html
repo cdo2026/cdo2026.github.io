@@ -114,7 +114,7 @@
 
 <script>
   // ---- config ----
-  var GRID = 4;                 // degrees per cell
+  var GRID = 2;                 // degrees per cell (page honors state.grid if present)
   var ENDPOINT = "https://script.google.com/macros/s/AKfycbzHKJ38Y50C3T-kQUgRznw61EcM8rx4Gg5sPXEJNI8cpl2khv-FkwFx08hoNvZI_9vK/exec"; // Apps Script web app
   var STATE_URL = "state.json"; // polled map state
   var POLL_MS = 3000;
@@ -164,12 +164,24 @@
   }
 
   function render(state){
+    if(state && state.grid){ GRID = state.grid; }
     drawBase();
-    // accumulate cell verdicts in probe order (later probes overpaint)
     var probes = (state && state.probes) || [];
+    // aggregate per cell; green always wins over red, regardless of probe order
+    var cv={};
     for(var i=0;i<probes.length;i++){
-      var p=probes[i]; if(p.cells && (p.verdict==='yes'||p.verdict==='no')) paintCells(p.cells,p.verdict);
+      var p=probes[i]; if(!p.cells) continue;
+      if(p.verdict!=='yes' && p.verdict!=='no') continue;
+      for(var j=0;j<p.cells.length;j++){
+        var k=p.cells[j][0]+','+p.cells[j][1];
+        if(p.verdict==='yes') cv[k]='yes';
+        else if(cv[k]!=='yes') cv[k]='no';
+      }
     }
+    var yes=[], no=[];
+    for(var key in cv){ if(!cv.hasOwnProperty(key)) continue;
+      var xy=key.split(','), cc=[+xy[0],+xy[1]]; (cv[key]==='yes'?yes:no).push(cc); }
+    paintCells(no,'no'); paintCells(yes,'yes');
     strokeCoast();
     drawGrid();
     renderFeed(probes);
