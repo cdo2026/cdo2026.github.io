@@ -117,7 +117,7 @@
 
 <script>
   // ---- config ----
-  var GRID = 2;                 // degrees per cell (page honors state.grid if present)
+  var GRID = 1;                 // degrees per cell (page honors state.grid if present)
   var ENDPOINT = "https://script.google.com/macros/s/AKfycbzHKJ38Y50C3T-kQUgRznw61EcM8rx4Gg5sPXEJNI8cpl2khv-FkwFx08hoNvZI_9vK/exec"; // Apps Script web app
   var STATE_URL = "state.json"; // polled map state
   var POLL_MS = 3000;
@@ -140,9 +140,10 @@
     }
   }
   function drawGrid(){
+    var step = GRID>=5 ? GRID : 5;   // keep the visible graticule readable at fine cell sizes
     ctx.strokeStyle='rgba(199,154,75,.10)'; ctx.lineWidth=1;
-    for(var lon=-180; lon<=180; lon+=GRID){ ctx.beginPath(); ctx.moveTo(lon2x(lon),0); ctx.lineTo(lon2x(lon),H); ctx.stroke(); }
-    for(var lat=-90; lat<=90; lat+=GRID){ ctx.beginPath(); ctx.moveTo(0,lat2y(lat)); ctx.lineTo(W,lat2y(lat)); ctx.stroke(); }
+    for(var lon=-180; lon<=180; lon+=step){ ctx.beginPath(); ctx.moveTo(lon2x(lon),0); ctx.lineTo(lon2x(lon),H); ctx.stroke(); }
+    for(var lat=-90; lat<=90; lat+=step){ ctx.beginPath(); ctx.moveTo(0,lat2y(lat)); ctx.lineTo(W,lat2y(lat)); ctx.stroke(); }
     // equator + prime meridian a touch stronger
     ctx.strokeStyle='rgba(199,154,75,.22)';
     ctx.beginPath(); ctx.moveTo(0,lat2y(0)); ctx.lineTo(W,lat2y(0)); ctx.stroke();
