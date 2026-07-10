@@ -219,7 +219,7 @@
     }
   }
 
-  var _labels=[], _probes=[];   // hit-testing for hover tooltips
+  var _labels=[], _probes=[], _badgeLayout=[], _badgeStamp=null;   // hit-testing + collision-resolved badge cache
   function placesOf(p){ return p.places || (p.cells ? [{label:p.env||'', cells:p.cells}] : []); }
   var _state=null, VIEW={zoom:1, panX:0, panY:0}, _flash=null;
   function clampView(){
@@ -354,7 +354,8 @@
       y+=lineH;
     }
   }
-  function drawLabels(probes){
+  function computeBadges(probes){
+    var B=[];
     for(var i=0;i<probes.length;i++){
       var p=probes[i]; if(p.verdict!=='yes'&&p.verdict!=='no') continue;
       var pls=placesOf(p);
@@ -364,22 +365,45 @@
         comps.sort(function(a,b){ return b.length-a.length; });
         var cap=Math.min(comps.length, 40);
         for(var c=0;c<cap;c++){
-          var comp=comps[c];
-          var sc=0,sr=0;
+          var comp=comps[c], sc=0, sr=0;
           for(var k=0;k<comp.length;k++){ sc+=comp[k][0]; sr+=comp[k][1]; }
-          var cc=sc/comp.length, cr=sr/comp.length;
-          var best=comp[0], bd=1e9;                          // snap badge to a real cell in the patch
+          var cc=sc/comp.length, cr=sr/comp.length, best=comp[0], bd=1e9;   // snap to a real cell in the patch
           for(var k=0;k<comp.length;k++){
             var d=(comp[k][0]-cc)*(comp[k][0]-cc)+(comp[k][1]-cr)*(comp[k][1]-cr);
             if(d<bd){ bd=d; best=comp[k]; }
           }
-          var rr=cellRect(best[0],best[1]);
-          var bx=rr[0]+rr[2]/2, by=rr[1]+rr[3]/2;
+          var rr=cellRect(best[0],best[1]), bx=rr[0]+rr[2]/2, by=rr[1]+rr[3]/2;
           if(inPanel(bx,by)) continue;   // keep the reserved overlay clear of map badges
-          badge(bx, by, i+1, p.verdict,
-                {num:i+1, q:(p.q||p.env||''), verdict:p.verdict, place:(pl.label||''), note:(p.note||'')});
+          var n=i+1, dg=String(n).length;
+          B.push({ x:bx, y:by, hw:dg*3.5+4, hh:8, n:n, verdict:p.verdict,
+                   info:{num:n, q:(p.q||p.env||''), verdict:p.verdict, place:(pl.label||''), note:(p.note||'')} });
         }
       }
+    }
+    // collision resolution: push overlapping number boxes apart (world space, zoom-invariant)
+    for(var it=0; it<28; it++){
+      var moved=false;
+      for(var a=0;a<B.length;a++){
+        for(var b=a+1;b<B.length;b++){
+          var A=B[a], C=B[b], dx=C.x-A.x, dy=C.y-A.y;
+          var ox=(A.hw+C.hw)-Math.abs(dx), oy=(A.hh+C.hh)-Math.abs(dy);
+          if(ox>0 && oy>0){                    // boxes overlap → separate on the shallower axis
+            moved=true;
+            if(ox<oy){ var px=ox/2*(dx<0?-1:1); A.x-=px; C.x+=px; }
+            else     { var py=oy/2*(dy<0?-1:1); A.y-=py; C.y+=py; }
+          }
+        }
+      }
+      if(!moved) break;
+    }
+    return B;
+  }
+  function drawLabels(probes){
+    if(!_state || _state.updated!==_badgeStamp){ _badgeLayout=computeBadges(probes); _badgeStamp=_state?_state.updated:'-'; }
+    for(var i=0;i<_badgeLayout.length;i++){
+      var b=_badgeLayout[i];
+      _labels.push({ x:b.x, y:b.y, info:b.info });
+      badge(b.x, b.y, b.n, b.verdict);
     }
   }
   function components(cells){
@@ -403,8 +427,7 @@
     }
     return out;
   }
-  function badge(x,y,n,verdict,info){
-    _labels.push({x:x, y:y, info:info});
+  function badge(x,y,n,verdict){
     ctx.font='bold 10px Georgia,serif';
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.lineJoin='round'; ctx.lineWidth=2.5; ctx.strokeStyle='rgba(11,26,36,.9)';
