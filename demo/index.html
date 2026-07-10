@@ -66,6 +66,9 @@
   .feed .tag.yes{ background:rgba(55,214,122,.16); color:var(--yes); }
   .feed .tag.no{ background:rgba(229,83,75,.16); color:var(--no); }
   .feed .tag.pending{ background:rgba(199,154,75,.16); color:var(--gold); }
+  .feed .qnum{ flex:none; width:26px; height:26px; border-radius:50%; background:rgba(199,154,75,.14);
+               border:1px solid rgba(199,154,75,.55); color:var(--gold); font-family:Georgia,serif;
+               font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; }
   .feed .q{ color:#eaf1f0; }
   .feed .why{ color:var(--muted); font-size:12px; }
   .empty{ text-align:center; color:#5c727c; font-size:13px; padding:10px; }
@@ -184,7 +187,26 @@
     paintCells(no,'no'); paintCells(yes,'yes');
     strokeCoast();
     drawGrid();
+    drawLabels(probes);
     renderFeed(probes);
+  }
+  function drawLabels(probes){
+    for(var i=0;i<probes.length;i++){
+      var p=probes[i]; if(!p.cells||!p.cells.length) continue;
+      if(p.verdict!=='yes'&&p.verdict!=='no') continue;
+      var sx=0,sy=0;
+      for(var j=0;j<p.cells.length;j++){ var r=cellRect(p.cells[j][0],p.cells[j][1]); sx+=r[0]+r[2]/2; sy+=r[1]+r[3]/2; }
+      badge(sx/p.cells.length, sy/p.cells.length, i+1, p.verdict);
+    }
+  }
+  function badge(x,y,n,verdict){
+    var R=17;
+    ctx.beginPath(); ctx.arc(x,y,R,0,Math.PI*2);
+    ctx.fillStyle='rgba(11,26,36,.85)'; ctx.fill();
+    ctx.lineWidth=2.5; ctx.strokeStyle = verdict==='yes'?getCSS('--yes'):getCSS('--no'); ctx.stroke();
+    ctx.fillStyle='#f4f1e8'; ctx.font='bold 20px Georgia,serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(String(n),x,y);
   }
 
   function renderFeed(probes){
@@ -195,7 +217,7 @@
       var p=probes[i];
       var v=p.verdict||'pending';
       var label = v==='yes'?'Survivable':(v==='no'?'Not survivable':'Resolving');
-      html+='<li><span class="tag '+v+'">'+label+'</span><span class="q">'+esc(p.env||p.q||'')+'</span>'
+      html+='<li><span class="qnum">'+(i+1)+'</span><span class="tag '+v+'">'+label+'</span><span class="q">'+esc(p.env||p.q||'')+'</span>'
           + (p.note?'<span class="why">&mdash; '+esc(p.note)+'</span>':'')+'</li>';
     }
     feed.innerHTML=html;
@@ -250,7 +272,7 @@
     var feed=document.getElementById('feed');
     if(feed.querySelector('.empty')) feed.innerHTML='';
     var li=document.createElement('li');
-    li.innerHTML='<span class="tag pending">Resolving</span><span class="q">'+esc(q)+'</span>';
+    li.innerHTML='<span class="qnum">&middot;</span><span class="tag pending">Resolving</span><span class="q">'+esc(q)+'</span>';
     feed.insertBefore(li,feed.firstChild);
   }
 
