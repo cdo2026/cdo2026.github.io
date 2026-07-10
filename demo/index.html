@@ -235,12 +235,11 @@
     return out;
   }
   function badge(x,y,n,verdict){
-    var R=17;
-    ctx.beginPath(); ctx.arc(x,y,R,0,Math.PI*2);
-    ctx.fillStyle='rgba(11,26,36,.85)'; ctx.fill();
-    ctx.lineWidth=2.5; ctx.strokeStyle = verdict==='yes'?getCSS('--yes'):getCSS('--no'); ctx.stroke();
-    ctx.fillStyle='#f4f1e8'; ctx.font='bold 20px Georgia,serif';
+    ctx.font='bold 10px Georgia,serif';
     ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.lineJoin='round'; ctx.lineWidth=2.5; ctx.strokeStyle='rgba(11,26,36,.9)';
+    ctx.strokeText(String(n),x,y);      // dark halo keeps digits legible over the paint
+    ctx.fillStyle='#f4f1e8';
     ctx.fillText(String(n),x,y);
   }
 
