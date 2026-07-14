@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WCDO26 — What Could Xenobots Do There?</title>
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  :root{
+    --ink:#0b1a24; --gold:#c79a4b; --teal:#3aa898;
+    --muted:#8aa0ab; --line:rgba(199,154,75,.18);
+    --yes:#37d67a; --card:rgba(255,255,255,.035);
+  }
+  html,body{ height:100%; }
+  body{
+    font-family:-apple-system,"Helvetica Neue","Segoe UI",Arial,sans-serif;
+    color:#eaf1f0; background:
+      radial-gradient(120% 130% at 85% -10%, rgba(58,168,152,.14), transparent 50%),
+      linear-gradient(160deg,#0b1a24 0%, #0c2330 70%, #0b1a24 100%);
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column;
+  }
+  .serif{ font-family:Georgia,"Times New Roman",serif; }
+  header{ padding:22px 26px 6px; text-align:center; }
+  .eyebrow{ text-transform:uppercase; letter-spacing:3px; font-size:10px; font-weight:700; color:var(--gold); }
+  h1{ font-size:29px; font-weight:700; letter-spacing:.3px; margin:8px 0 4px; color:#f4f1e8; }
+  .sub{ font-size:13.5px; color:var(--muted); max-width:660px; margin:0 auto; line-height:1.5; }
+
+  main{ flex:1 0 auto; width:100%; max-width:820px; margin:0 auto; padding:8px 20px 40px; }
+
+  /* standing instruction / premise */
+  .premise{ margin:20px 0 8px; padding:14px 18px; border:1px solid rgba(199,154,75,.28);
+            border-radius:12px; background:rgba(199,154,75,.06);
+            display:flex; gap:12px; align-items:flex-start; }
+  .premise .pi{ flex:none; font-size:18px; line-height:1.2; }
+  .premise .pt{ font-size:14px; line-height:1.55; color:#efe7d4; }
+  .premise .pt b{ color:#f6efdd; font-weight:600; }
+
+  .statusbar{ display:flex; justify-content:space-between; align-items:center;
+              margin:16px 2px 6px; font-size:11.5px; color:var(--muted); }
+  .statusbar .live{ display:inline-flex; align-items:center; gap:7px; }
+  .statusbar .dot{ width:8px; height:8px; border-radius:50%; background:var(--yes);
+                   box-shadow:0 0 0 0 rgba(55,214,122,.6); animation:pulse 2.4s infinite; }
+  @keyframes pulse{ 0%{ box-shadow:0 0 0 0 rgba(55,214,122,.5);} 70%{ box-shadow:0 0 0 7px rgba(55,214,122,0);} 100%{ box-shadow:0 0 0 0 rgba(55,214,122,0);} }
+
+  .empty{ text-align:center; color:var(--muted); font-size:14px; padding:46px 20px; line-height:1.6;
+          border:1px dashed var(--line); border-radius:12px; margin-top:8px; }
+
+  .env{ border:1px solid var(--line); border-radius:12px; background:var(--card);
+        margin-top:14px; overflow:hidden; }
+  .env-h{ display:flex; gap:13px; align-items:flex-start; padding:14px 16px 12px; }
+  .enum{ flex:none; width:30px; height:30px; border-radius:50%;
+         background:rgba(55,214,122,.14); border:1px solid rgba(55,214,122,.5);
+         color:#8ff0b6; font-family:Georgia,serif; font-weight:700; font-size:14px;
+         display:flex; align-items:center; justify-content:center; }
+  .env-txt{ min-width:0; }
+  .env-label{ display:block; font-size:16px; font-weight:600; color:#f4f1e8; line-height:1.35; }
+  .env-note{ display:block; font-size:12px; color:var(--muted); margin-top:2px; line-height:1.45; }
+
+  .ideas{ list-style:none; padding:0 16px 4px 59px; }
+  .ideas li{ position:relative; font-size:13.5px; color:#dfeae8; line-height:1.5;
+             padding:7px 2px 7px 14px; border-top:1px solid rgba(255,255,255,.05); }
+  .ideas li:before{ content:"›"; position:absolute; left:0; top:7px; color:var(--teal); font-weight:700; }
+  .ideas li.mine{ color:#eaf1f0; }
+  .ideas.none-yet{ display:none; }
+
+  .add{ display:flex; gap:8px; padding:10px 16px 15px 59px; }
+  .add input{ flex:1 1 auto; min-width:0; background:rgba(255,255,255,.05);
+              border:1px solid rgba(199,154,75,.28); border-radius:9px;
+              padding:10px 12px; color:#eaf1f0; font-size:13.5px; font-family:inherit; }
+  .add input::placeholder{ color:#6f8792; }
+  .add input:focus{ outline:none; border-color:rgba(58,168,152,.7); background:rgba(255,255,255,.07); }
+  .add button{ flex:none; background:linear-gradient(180deg,#3aa898,#2c8577); color:#04231e;
+               border:none; border-radius:9px; padding:0 16px; font-size:13px; font-weight:700;
+               letter-spacing:.3px; cursor:pointer; }
+  .add button:hover{ filter:brightness(1.08); }
+  .add button:active{ transform:translateY(1px); }
+
+  footer{ text-align:center; color:var(--muted); font-size:11px; padding:8px 20px 26px; }
+  footer a{ color:var(--gold); text-decoration:none; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">WCDO26 · Exercise 2</div>
+    <h1 class="serif">What could xenobots do there?</h1>
+    <p class="sub">The environments below are the ones we just found <b style="color:#8ff0b6;font-weight:600">survivable</b> in
+       <a href="/where/" style="color:var(--gold);text-decoration:none">Where</a>. They fill in live as that list grows.</p>
+  </header>
+
+  <main>
+    <div class="premise">
+      <span class="pi">💡</span>
+      <span class="pt">Imagine a near future in which xenobots gain <b>simple sensing</b> — they can detect something in their
+        surroundings and <b>react</b> to it. For each place below, what useful activity might a xenobot then perform there?
+        Type your ideas into its box. Everyone's ideas appear together.</span>
+    </div>
+
+    <div class="statusbar">
+      <span class="live"><span class="dot"></span><span id="status">connecting&hellip;</span></span>
+      <span id="count"></span>
+    </div>
+
+    <div id="list"></div>
+    <div id="emptybox" class="empty">
+      No survivable environments yet.<br>
+      As the group confirms places in the <a href="/where/" style="color:var(--gold)">Where</a> exercise,
+      they appear here for you to brainstorm.
+    </div>
+  </main>
+
+  <footer>WCDO26 · The Second Abele Workshop on Computationally Designed Organisms</footer>
+
+<script>
+(function(){
+  "use strict";
+  var ENDPOINT = "https://script.google.com/macros/s/AKfycbzHKJ38Y50C3T-kQUgRznw61EcM8rx4Gg5sPXEJNI8cpl2khv-FkwFx08hoNvZI_9vK/exec";
+
+  var listEl = document.getElementById('list');
+  var emptyEl = document.getElementById('emptybox');
+  var statusEl = document.getElementById('status');
+  var countEl = document.getElementById('count');
+
+  var envNodes = {};                 // n -> { section, ul }
+  var ideaBuckets = {};              // n -> { keys:Set, ul:node|null, pending:[] }
+  var SEP = '␟';
+
+  function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function norm(s){ return String(s==null?'':s).trim().replace(/\s+/g,' ').toLowerCase(); }
+
+  // ---- JSONP (cross-origin read of the Apps Script web app) ----
+  var _cb = 0;
+  function jsonp(url, ok, err){
+    var cb = '__wc' + (++_cb);
+    var s = document.createElement('script');
+    var done = false;
+    var to = setTimeout(function(){ finish(false); }, 8000);
+    function finish(good, data){
+      if(done) return; done = true;
+      clearTimeout(to);
+      try{ delete window[cb]; }catch(e){ window[cb] = undefined; }
+      if(s.parentNode) s.parentNode.removeChild(s);
+      if(good){ ok(data); } else if(err){ err(); }
+    }
+    window[cb] = function(data){ finish(true, data); };
+    s.onerror = function(){ finish(false); };
+    s.src = url + (url.indexOf('?')<0?'?':'&') + 'callback=' + cb + '&t=' + Date.now();
+    document.head.appendChild(s);
+  }
+
+  function bucket(n){
+    if(!ideaBuckets[n]) ideaBuckets[n] = { keys:{}, ul:null, pending:[] };
+    return ideaBuckets[n];
+  }
+
+  // ---- environments (survivable probes from /where/) ----
+  function ensureEnv(n, label, note){
+    if(envNodes[n]){
+      // keep label fresh if the resolver refined it
+      var lab = envNodes[n].section.querySelector('.env-label');
+      if(lab && lab.textContent !== label) lab.textContent = label;
+      return;
+    }
+    var sec = document.createElement('section');
+    sec.className = 'env';
+    sec.setAttribute('data-n', n);
+    sec.innerHTML =
+      '<div class="env-h"><span class="enum">'+n+'</span>'+
+      '<div class="env-txt"><span class="env-label">'+esc(label)+'</span>'+
+      (note?'<span class="env-note">'+esc(note)+'</span>':'')+'</div></div>'+
+      '<ul class="ideas none-yet"></ul>'+
+      '<form class="add"><input type="text" maxlength="300" autocomplete="off" '+
+      'placeholder="What could a xenobot do here?"><button type="submit">Add</button></form>';
+
+    var ul = sec.querySelector('.ideas');
+    var form = sec.querySelector('.add');
+    var input = sec.querySelector('input');
+    form.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      var text = input.value.trim();
+      if(!text) return;
+      addIdea(n, text, true);                       // optimistic, local
+      input.value = '';
+      input.focus();
+      if(ENDPOINT){
+        fetch(ENDPOINT, { method:'POST',
+          headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body: JSON.stringify({ idea:text, env:n, envLabel:label }) }).catch(function(){});
+      }
+    });
+
+    // insert in ascending numeric order
+    var inserted = false;
+    var kids = listEl.children;
+    for(var i=0;i<kids.length;i++){
+      if(Number(kids[i].getAttribute('data-n')) > n){ listEl.insertBefore(sec, kids[i]); inserted = true; break; }
+    }
+    if(!inserted) listEl.appendChild(sec);
+
+    envNodes[n] = { section:sec, ul:ul };
+    var b = bucket(n); b.ul = ul;
+    // flush any ideas that arrived before this env existed
+    var pend = b.pending; b.pending = [];
+    for(var j=0;j<pend.length;j++) appendIdeaLi(n, pend[j], false);
+
+    emptyEl.style.display = 'none';
+  }
+
+  // ---- ideas ----
+  function appendIdeaLi(n, text, mine){
+    var b = bucket(n);
+    var li = document.createElement('li');
+    if(mine) li.className = 'mine';
+    li.textContent = text;
+    b.ul.appendChild(li);
+    b.ul.classList.remove('none-yet');
+  }
+
+  function addIdea(n, text, mine){
+    n = Number(n);
+    var key = n + SEP + norm(text);
+    var b = bucket(n);
+    if(b.keys[key]) return;                          // dedupe optimistic vs server echo
+    b.keys[key] = true;
+    if(b.ul){ appendIdeaLi(n, text, mine); }
+    else { b.pending.push(text); }                   // env block not built yet
+  }
+
+  // ---- polling ----
+  function applyState(state){
+    statusEl.innerHTML = 'live';
+    var probes = (state && state.probes) || [];
+    var survivable = 0;
+    for(var i=0;i<probes.length;i++){
+      var p = probes[i];
+      if(p.verdict !== 'yes') continue;              // only survivable environments
+      survivable++;
+      ensureEnv(i+1, p.env || p.q || 'Environment '+(i+1), p.note || '');
+    }
+    countEl.textContent = survivable ? (survivable + ' environment' + (survivable===1?'':'s')) : '';
+    if(!survivable) emptyEl.style.display = '';
+  }
+
+  function applyIdeas(res){
+    var ideas = (res && res.ideas) || [];
+    for(var i=0;i<ideas.length;i++){
+      var it = ideas[i];
+      var n = Number(it.env);
+      if(!n) continue;
+      addIdea(n, it.idea, false);
+    }
+  }
+
+  function pollState(){
+    if(!ENDPOINT){ statusEl.textContent='no backend'; return; }
+    jsonp(ENDPOINT, applyState, function(){ statusEl.innerHTML='reconnecting&hellip;'; });
+  }
+  function pollIdeas(){
+    if(!ENDPOINT) return;
+    jsonp(ENDPOINT + '?mode=ideas', applyIdeas, function(){});
+  }
+
+  pollState(); pollIdeas();
+  setInterval(pollState, 3500);
+  setInterval(pollIdeas, 3500);
+})();
+</script>
+</body>
+</html>
